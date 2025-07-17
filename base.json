@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": ["config:recommended", "customManagers:dockerfileVersions"],
   "packageRules": [
     {
       "matchPackageNames": ["*"],
@@ -103,5 +103,29 @@
   "git-submodules": {
     "enabled": true
   },
-  "baseBranchPatterns": ["main"]
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.(tekton|builds?)\\/.*\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-zA-Z0-9-._]+?) depName=(?<depName>[^\\s]+?)(?:\\s+(?:lookupName|packageName)=(?<packageName>[^\\s]+?))?(?:\\s+versioning=(?<versioning>[^\\s]+?))?(?:\\s+extractVersion=(?<extractVersion>[^\\s]+?))?(?:\\s+registryUrl=(?<registryUrl>[^\\s]+?))?\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[0-9a-zA-Z._-]+)[\"']?"
+      ],
+      "description": "Update images in Tekton pipelines and build scripts. For `build` and `tekton` files, add `# renovate: datasource=docker` comment above each image entry."
+    },
+    {
+      "customType": "regex",
+      "datasourceTemplate": "docker",
+      "managerFilePatterns": [
+        "/(^|/)\\.ko\\.ya?ml$/",
+        "/(^|/)ko\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "defaultBaseImage\\s*:\\s*(?<depName>[^:\\s]+?)(?::(?<currentValue>[^\\s]+?))?\\s*$",
+        "# renovate: datasource=docker\\s+[^\\s:]+\\s*:\\s*(?<depName>[^:\\s]+?)(?::(?<currentValue>[^\\s]+?))?\\s*$"
+      ],
+      "description": "Update `defaultBaseImage` and images in `baseImageOverrides` in ko configuration files. For `baseImageOverrides`, add `# renovate: datasource=docker` comment above each image entry."
+    }
+  ]
 }
