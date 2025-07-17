@@ -103,5 +103,5 @@
   "git-submodules": {
     "enabled": true
   },
-  "baseBranches": ["main"]
+  "baseBranchPatterns": ["main"]
 }
