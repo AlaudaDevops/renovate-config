@@ -13,13 +13,7 @@
     {
       "matchDatasources": ["github-releases"],
       "matchPackageNames": [
-        "AlaudaDevops/tektoncd-cli",
-        "AlaudaDevops/trivy",
-        "AlaudaDevops/harbor-scanner-trivy",
-        "AlaudaDevops/git-clone",
-        "AlaudaDevops/syft",
-        "AlaudaDevops/cosign",
-        "AlaudaDevops/kubernetes"
+        "AlaudaDevops/**"
       ],
       "versioning": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-alauda-(?<build>\\d+)$"
     },
