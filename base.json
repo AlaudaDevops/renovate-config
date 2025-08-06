@@ -39,6 +39,13 @@
        "versioning": "regex:^v?(?<major>\\d+)(?:\\.(?<minor>\\d+))?(?:\\.(?<patch>\\d+))?-alauda-(?<build>\\d+)$"
     },
     {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "golang"
+      ],
+      "versioning": "docker"
+    },
+    {
       "matchPackageNames": ["*"],
       "enabled": false,
       "automerge": false
