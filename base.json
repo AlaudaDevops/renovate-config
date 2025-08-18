@@ -59,7 +59,7 @@
     },
     {
       "matchDatasources":["docker"],
-      "matchUpdateTypes": ["minor", "patch", "pin", "pinDigest"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "pinDigest", "digest"],
       "enabled": true,
       "automerge": true
     },
@@ -87,6 +87,12 @@
     {
       "matchBaseBranches": ["release-*", "alauda-*"],
       "extends":["security:only-security-updates"],
+      "automerge": true
+    },
+    {
+      "matchDatasources":["docker"],
+      "matchUpdateTypes": ["patch", "pin", "pinDigest", "digest"],
+      "enabled": true,
       "automerge": true
     },
     {
