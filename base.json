@@ -21,6 +21,9 @@
         "AlaudaDevops/cosign",
         "AlaudaDevops/yq",
         "AlaudaDevops/golangci-lint",
+        "AlaudaDevops/azure-storage-azcopy",
+        "AlaudaDevops/cfssl",
+        "AlaudaDevops/gomplate",
         "AlaudaDevops/kubernetes"
       ],
       "versioning": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-alauda-(?<build>\\d+)$"

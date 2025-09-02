@@ -1,0 +1,159 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: pr-manage
+  annotations:
+    pipelinesascode.tekton.dev/on-comment: "^/(help|rebase|lgtm|remove-lgtm|cherry-pick|assign|merge|ready|unassign|label|unlabel|check|retest|batch)([ \\t].*)?$"
+    pipelinesascode.tekton.dev/max-keep-runs: "5"
+spec:
+  params:
+    - name: trigger_comment
+    - name: repo_owner
+    - name: repo_name
+    - name: pull_request_number
+    - name: comment_sender
+    - name: git_auth_secret
+    - name: git_auth_secret_key
+      default: git-provider-token
+    - name: image
+      default: registry.alauda.cn:60070/devops/toolbox/pr-cli:latest
+    - name: lgtm_permissions
+      # Allow read permission users to trigger lgtm in internal repositories
+      default: admin,write,read
+    - name: lgtm_threshold
+      default: "1"
+    - name: lgtm_review_event
+      default: APPROVE
+    - name: merge_method
+      default: squash
+    - name: self_check_name
+      default: pr-manage
+    - name: platform
+      default: github
+    - name: debug
+      default: "false"
+    - name: verbose
+      default: "true"
+    - name: robot_accounts
+      default: "alaudabot,dependabot,renovate,alaudaa-renovate,edge-katanomi-app2,edge-katanomi-app2[bot]"
+    - name: git_comment_auth_secret
+      default: "github-credentials"
+    - name: git_comment_auth_secret_key
+      default: "token"
+  tasks:
+    - name: pr-merge-management
+      displayName: PR Merge & Management Operations
+      taskSpec:
+        results:
+          - name: merge-successful
+            description: Indicates if a merge operation was successful
+          - name: has-cherry-pick-comments
+            description: Indicates if there are cherry-pick comments in the PR (only written during /merge or /ready operations)
+        steps:
+          - name: cli
+            image: $(params.image)
+            imagePullPolicy: Always
+            command: ["/usr/local/bin/pr-cli"]
+            computeResources:
+              requests:
+                cpu: "200m"
+                memory: "192Mi"
+              limits:
+                cpu: "500m"
+                memory: "512Mi"
+            env:
+              - name: PR_PLATFORM
+                value: $(params.platform)
+              - name: PR_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: $(params.git_auth_secret)
+                    key: $(params.git_auth_secret_key)
+              - name: PR_REPO_OWNER
+                value: $(params.repo_owner)
+              - name: PR_REPO_NAME
+                value: $(params.repo_name)
+              - name: PR_PR_NUM
+                value: $(params.pull_request_number)
+              - name: PR_COMMENT_SENDER
+                value: $(params.comment_sender)
+              - name: PR_TRIGGER_COMMENT
+                value: $(params.trigger_comment)
+              - name: PR_LGTM_THRESHOLD
+                value: $(params.lgtm_threshold)
+              - name: PR_LGTM_PERMISSIONS
+                value: $(params.lgtm_permissions)
+              - name: PR_LGTM_REVIEW_EVENT
+                value: $(params.lgtm_review_event)
+              - name: PR_MERGE_METHOD
+                value: $(params.merge_method)
+              - name: PR_SELF_CHECK_NAME
+                value: $(params.self_check_name)
+              - name: PR_DEBUG
+                value: $(params.debug)
+              - name: PR_VERBOSE
+                value: $(params.verbose)
+              - name: PR_ROBOT_ACCOUNTS
+                value: $(params.robot_accounts)
+              - name: PR_COMMENT_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: $(params.git_comment_auth_secret)
+                    key: $(params.git_comment_auth_secret_key)
+                    optional: true
+  finally:
+    # Execute cherry-pick operations in finally block because after PR merge,
+    # the pipeline will be cancelled (set to CancelledRunFinally), so these
+    # operations must be placed in finally to ensure they run
+    - name: post-merge-cherry-pick
+      displayName: Post-Merge Cherry-Pick Operations
+      when:
+        - input: $(tasks.pr-merge-management.results.merge-successful)
+          operator: in
+          values: ["true"]
+        - input: $(tasks.pr-merge-management.results.has-cherry-pick-comments)
+          operator: in
+          values: ["true"]
+      taskSpec:
+        steps:
+          - name: cherry-pick-handler
+            image: $(params.image)
+            imagePullPolicy: Always
+            command: ["/usr/local/bin/pr-cli"]
+            computeResources:
+              requests:
+                cpu: "200m"
+                memory: "192Mi"
+              limits:
+                cpu: "1"
+                memory: "1Gi"
+            env:
+              - name: PR_PLATFORM
+                value: $(params.platform)
+              - name: PR_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: $(params.git_auth_secret)
+                    key: $(params.git_auth_secret_key)
+              - name: PR_REPO_OWNER
+                value: $(params.repo_owner)
+              - name: PR_REPO_NAME
+                value: $(params.repo_name)
+              - name: PR_PR_NUM
+                value: $(params.pull_request_number)
+              - name: PR_COMMENT_SENDER
+                value: $(params.comment_sender)
+              - name: PR_TRIGGER_COMMENT
+                value: "/__post-merge-cherry-pick"
+              - name: PR_DEBUG
+                value: $(params.debug)
+              - name: PR_VERBOSE
+                value: $(params.verbose)
+              - name: PR_POST_MERGE_CHERRY_PICK
+                value: "true"
+              - name: PR_COMMENT_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: $(params.git_comment_auth_secret)
+                    key: $(params.git_comment_auth_secret_key)
+                    optional: true
