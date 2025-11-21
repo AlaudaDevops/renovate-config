@@ -24,7 +24,8 @@
         "AlaudaDevops/azure-storage-azcopy",
         "AlaudaDevops/cfssl",
         "AlaudaDevops/gomplate",
-        "AlaudaDevops/kubernetes"
+        "AlaudaDevops/kubernetes",
+        "AlaudaDevops/zap"
       ],
       "versioning": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-alauda-(?<build>\\d+)$"
     },
