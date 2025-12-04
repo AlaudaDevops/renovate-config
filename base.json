@@ -228,7 +228,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^config\\/.*\\.ya?ml$/"],
       "matchStrings": [
-        "# renovate: datasource=harbor-newest-commitid-tags depName=(?<depName>[^\\s]+?)(?:\\s+packageName=(?<packageName>[^\\s]+?))?\\s*\\n.*[:=]\\s*[\"']?(?<currentValue>v[0-9]+\\.[0-9]+\\.[0-9]+)-(?<currentDigest>[0-9a-fA-F]+)[\"']?"
+        "# renovate: datasource=harbor-newest-commitid-tags depName=(?<depName>[^\\s]+?)(?:\\s+packageName=(?<packageName>[^\\s]+?))?\\s*\\n.*[:=]\\s*[\"']?(?<replaceString>(?<currentValue>v[0-9]+\\.[0-9]+\\.[0-9]+)-(?<currentDigest>[0-9a-fA-F]+))[\"']?"
       ],
       "datasourceTemplate": "custom.harbor-newest-commitid-tags",
       "autoReplaceStringTemplate": "{{{newValue}}}-{{{newDigest}}}"
