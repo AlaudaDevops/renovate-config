@@ -194,9 +194,9 @@
       "defaultRegistryUrlTemplate": "https://build-harbor.alauda.cn/api/v2.0/projects/{{lookup (split packageName '/') 0}}/repositories/{{ replace '/' '%2F' (replace '^[^/]+/' '' packageName) }}/artifacts?page=1&page_size=50&sort=-push_time",
       "format": "json",
       "transformTemplates": [
-        "{'releases': $map($distinct($[].tags.( $substringBefore(name, '-') )),function($prefix) { {'version': $map([$filter($[].tags,function($tag) { $substringBefore($tag.name, '-') = $prefix })[0]],function($item) {$item.name})} })}"
+        "{ 'releases': $map($distinct($[].tags.($substringBefore(name, '-'))), function($prefix) { ( $item := $filter($[].tags, function($tag) { $substringBefore($tag.name, '-') = $prefix })[0]; { 'version': $substringBefore($item.name, '-'), 'digest': $substringAfter($item.name, '-') } ) }) }"
       ],
-      "description": "Request the Harbor API, sort by push time in descending order, remove duplicate tags after stripping the commit id, and return the first tag"
+      "description": "Separate the Commit ID from the version number and treat it as a Digest, leveraging Renovate's digest update mechanism to trigger updates, then use autoReplaceStringTemplate to restore the original format when writing to the file."
     }
   },
   "customManagers": [
@@ -226,15 +226,12 @@
     },
     {
       "customType": "regex",
-      "description": "Support automatic update of tags in commitid format",
-      "managerFilePatterns": [
-        "/^config\\/.*\\.ya?ml$/"
-      ],
+      "managerFilePatterns": ["/^config\\/.*\\.ya?ml$/"],
       "matchStrings": [
-        "# renovate: datasource=harbor-newest-commitid-tags depName=(?<depName>[^\\s]+?)(?:\\s+(?:lookupName|packageName)=(?<packageName>[^\\s]+?))?(?:\\s+versioning=(?<versioning>[^\\s]+?))?(?:\\s+extractVersion=(?<extractVersion>[^\\s]+?))?(?:\\s+registryUrl=(?<registryUrl>[^\\s]+?))?\\s*\\n.*[:=]\\s*[\"']?(?<currentValue>[0-9a-zA-Z._-]+)[\"']?"
+        "# renovate: datasource=harbor-newest-commitid-tags depName=(?<depName>[^\\s]+?)(?:\\s+packageName=(?<packageName>[^\\s]+?))?\\s*\\n.*[:=]\\s*[\"']?(?<currentValue>v[0-9]+\\.[0-9]+\\.[0-9]+)-(?<currentDigest>[0-9a-fA-F]+)[\"']?"
       ],
       "datasourceTemplate": "custom.harbor-newest-commitid-tags",
-      "versioningTemplate": "semver"
+      "autoReplaceStringTemplate": "{{{newValue}}}-{{{newDigest}}}"
     }
   ]
 }
