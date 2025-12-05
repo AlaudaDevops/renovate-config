@@ -164,9 +164,19 @@
     {
       "matchDatasources":["go"],
       "matchPackageNames": [
-        "golang.org/x/**",
-        "go"
+        "golang.org/x/**"
       ],
+      "groupName": "golang official packages",
+      "groupSlug": "go-official-packages"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackagePatterns": ["golang"],
+      "groupName": "golang official packages",
+      "groupSlug": "go-official-packages"
+    },
+    {
+      "matchDatasources": ["golang-version"],
       "groupName": "golang official packages",
       "groupSlug": "go-official-packages"
     },
