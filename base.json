@@ -230,8 +230,7 @@
       "matchStrings": [
         "# renovate: datasource=harbor-newest-commitid-tags depName=(?<depName>[^\\s]+?)(?:\\s+packageName=(?<packageName>[^\\s]+?))?\\s*\\n.*[:=]\\s*[\"']?(?<replaceString>(?<currentValue>v[0-9]+\\.[0-9]+\\.[0-9]+)-(?<currentDigest>[0-9a-fA-F]+))[\"']?"
       ],
-      "datasourceTemplate": "custom.harbor-newest-commitid-tags",
-      "autoReplaceStringTemplate": "{{{newValue}}}-{{{newDigest}}}"
+      "datasourceTemplate": "custom.harbor-newest-commitid-tags"
     }
   ]
 }
