@@ -1,0 +1,98 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "packageRules": [
+        // 为 alauda fork 的开源仓库设置 release 版本解析规则
+        // 这些仓库是为了解决社区未修复的漏洞，alauda 会修复漏洞后发布新的 release
+        // 版本号规则示例，v1.1.1-alauda-1，最后一个 1是 build number
+        {
+            "matchDatasources": [
+                "github-releases"
+            ],
+            "matchPackageNames": [
+                "AlaudaDevops/tektoncd-cli",
+                "AlaudaDevops/trivy",
+                "AlaudaDevops/harbor-scanner-trivy",
+                "AlaudaDevops/git-clone",
+                "AlaudaDevops/syft",
+                "AlaudaDevops/cosign",
+                "AlaudaDevops/yq",
+                "AlaudaDevops/golangci-lint",
+                "AlaudaDevops/azure-storage-azcopy",
+                "AlaudaDevops/cfssl",
+                "AlaudaDevops/gomplate",
+                "AlaudaDevops/kubernetes",
+                "AlaudaDevops/zap"
+            ],
+            "versioning": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-alauda-(?<build>\\d+)$"
+        },
+        // 为运维提供的基础镜像设置版本解析规则
+        // 版本号规则示例，12-alauda-202503180545，最后是 build number，是构建时的年月日时分
+        {
+            "matchDatasources": [
+                "docker"
+            ],
+            "matchPackageNames": [
+                "build-harbor.alauda.cn/ops/photon",
+                "build-harbor.alauda.cn/ops/debian",
+                "build-harbor.alauda.cn/ops/distroless-static",
+                "build-harbor.alauda.cn/ops/ubi*",
+                "build-harbor.alauda.cn/ops/alpine",
+                "build-harbor.alauda.cn/ops/centos",
+                "build-harbor.alauda.cn/ops/ubuntu"
+            ],
+            "versioning": "regex:^v?(?<major>\\d+)(?:\\.(?<minor>\\d+))?(?:\\.(?<patch>\\d+))?-alauda-(?<build>\\d+)$"
+        }
+    ],
+    "customDatasources": {
+        // 为类似 v1.2.3-g78e9a8e 这样的版本号设置数据源，renovate 默认是通过 oci 协议获取镜像 tag 列表，所以
+        // 无法区分 v1.2.3-g78e9a8e 和 v1.2.3-g1111111 哪个是最新的 tag。
+        // 自定义 datasource，从 harbor api 获取 tag 列表，根据时间获取最新的 tag。
+        "harbor-newest-commitid-tags": {
+            "defaultRegistryUrlTemplate": "https://build-harbor.alauda.cn/api/v2.0/projects/{{lookup (split packageName '/') 0}}/repositories/{{ replace '/' '%2F' (replace '^[^/]+/' '' packageName) }}/artifacts?page=1&page_size=50&sort=-push_time",
+            "format": "json",
+            "transformTemplates": [
+                "{ 'releases': $map($distinct($[].tags.($substringBefore(name, '-'))), function($prefix) { ( $item := $filter($[].tags, function($tag) { $substringBefore($tag.name, '-') = $prefix })[0]; { 'version': $substringBefore($item.name, '-'), 'digest': $substringAfter($item.name, '-') } ) }) }"
+            ],
+            "description": "Separate the Commit ID from the version number and treat it as a Digest, leveraging Renovate's digest update mechanism to trigger updates, then use autoReplaceStringTemplate to restore the original format when writing to the file."
+        }
+    },
+    "customManagers": [
+        // 支持 yaml 配置文件中通过 renovate 注解更新版本
+        {
+            "customType": "regex",
+            "managerFilePatterns": [
+                "/^\\.(tekton|builds?)\\/.*\\.ya?ml$/",
+                "/^config\\/.*\\.ya?ml$/"
+            ],
+            "matchStrings": [
+                "# renovate: datasource=(?<datasource>[a-zA-Z0-9-._]+?) depName=(?<depName>[^\\s]+?)(?:\\s+(?:lookupName|packageName)=(?<packageName>[^\\s]+?))?(?:\\s+versioning=(?<versioning>[^\\s]+?))?(?:\\s+extractVersion=(?<extractVersion>[^\\s]+?))?(?:\\s+registryUrl=(?<registryUrl>[^\\s]+?))?\\s*\\n.*[:=]\\s*[\"']?(?<currentValue>[0-9a-zA-Z._-]+)[\"']?"
+            ],
+            "description": "Update images in Tekton pipelines and build scripts. For `build` and `tekton` files, add `# renovate: datasource=docker` comment above each image entry."
+        },
+        // 支持 ko 配置文件中的基础镜像自动更新
+        {
+            "customType": "regex",
+            "datasourceTemplate": "docker",
+            "managerFilePatterns": [
+                "/(^|/)\\.ko\\.ya?ml$/",
+                "/(^|/)ko\\.ya?ml$/"
+            ],
+            "matchStrings": [
+                "defaultBaseImage\\s*:\\s*(?<depName>[^:\\s]+?)(?::(?<currentValue>[^\\s]+?))?\\s*$",
+                "# renovate: datasource=docker\\s+[^\\s:]+\\s*:\\s*(?<depName>[^:\\s]+?)(?::(?<currentValue>[^\\s]+?))?\\s*$"
+            ],
+            "description": "Update `defaultBaseImage` and images in `baseImageOverrides` in ko configuration files. For `baseImageOverrides`, add `# renovate: datasource=docker` comment above each image entry."
+        },
+        // 支持 yaml 中类似 v1.2.3-g78e9a8e 这种没有 build number 的版本号自动更新
+        {
+            "customType": "regex",
+            "managerFilePatterns": [
+                "/^config\\/.*\\.ya?ml$/"
+            ],
+            "matchStrings": [
+                "# renovate: datasource=harbor-newest-commitid-tags depName=(?<depName>[^\\s]+?)(?:\\s+packageName=(?<packageName>[^\\s]+?))?\\s*\\n.*[:=]\\s*[\"']?(?<replaceString>(?<currentValue>v[0-9]+\\.[0-9]+\\.[0-9]+)-(?<currentDigest>[0-9a-fA-F]+))[\"']?"
+            ],
+            "datasourceTemplate": "custom.harbor-newest-commitid-tags"
+        }
+    ]
+}
