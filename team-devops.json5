@@ -1,0 +1,237 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:recommended",
+        "customManagers:dockerfileVersions",
+        "github>AlaudaDevops/renovate-config:core.json5"
+    ],
+    "gitIgnoredAuthors": [
+        "alaudabot"
+    ],
+    "ignorePaths": [
+        "**/testdata/**",
+        "**/examples/**",
+        "test/**",
+        "testing/**"
+    ],
+    "dependencyDashboardOSVVulnerabilitySummary": "all",
+    "vulnerabilityAlerts": {
+        "enabled": true
+    },
+    "osvVulnerabilityAlerts": true,
+    "labels": [
+        "dependencies"
+    ],
+    "git-submodules": {
+        "enabled": true
+    },
+    "packageRules": [
+        // === 1. 基本策略 (start) ===
+        // 默认禁止所有更新，仅允许安全更新
+        {
+            "matchPackageNames": [
+                "*"
+            ],
+            "enabled": false,
+            "automerge": false
+        },
+        // 启用以下数据源的检查
+        {
+            "matchDatasources": [
+                "maven",
+                "docker",
+                "github-releases",
+                "github-tags",
+                "go",
+                "golang-version"
+            ],
+            "enabled": true
+        },
+        // 默认不允许更新，下一条配置允许安全更新
+        {
+            "matchUpdateTypes": [
+                "major",
+                "minor",
+                "patch"
+            ],
+            "enabled": false,
+            "automerge": false
+        },
+        {
+            "matchBaseBranches": [
+                "release-*",
+                "alauda-*"
+            ],
+            "extends": [
+                "security:only-security-updates"
+            ],
+            "enabled": true,
+            "automerge": true
+        },
+        // === 1. 基本策略 (end) ===
+
+        // === 2. 特定语言和场景的配置 (start) ===
+        // 因为默认只允许安全更新，因此下面这些配置都是针对特定场景设置的白名单
+        // === 2.1 go 依赖配置更新 (start) ===
+        // 禁止 digest 格式的依赖包升级，通常 renovate 会更新错
+        {
+            "matchDatasources": [
+                "go"
+            ],
+            "matchUpdateTypes": [
+                "digest"
+            ],
+            "enabled": false
+        },
+        // 允许 golang 版本自动更新
+        {
+            "matchDatasources": [
+                "golang-version"
+            ],
+            "matchUpdateTypes": [
+                "minor",
+                "patch"
+            ],
+            "rangeStrategy": "bump",
+            "enabled": true,
+            "automerge": true
+        },
+        // === 2.1 go 依赖配置更新 (end) ===
+
+        // === 2.2 docker 更新配置 (start) ===
+        // 支持 docker 镜像 patch 版本自动更新
+        {
+            "matchDatasources": [
+                "docker"
+            ],
+            "matchUpdateTypes": [
+                "minor",
+                "patch",
+                "pin",
+                "pinDigest",
+                "digest"
+            ],
+            "enabled": true,
+            "automerge": true
+        },
+        // === 2.2 docker 更新配置 (end) ===
+
+        // === 2.3 git submodules 更新配置 (start) ===
+        // 支持 git-submodules 的自动更新
+        {
+            "matchManagers": [
+                "git-submodules"
+            ],
+            "enabled": true,
+            "automerge": true
+        },
+        // === 2.3 git submodules 更新配置 (end) ===
+
+        // === 2.4 github 制品更新配置 (start) ===
+        // 支持 github-releases 和 github-tags 的 patch 版本自动更新
+        {
+            "matchDatasources": [
+                "github-releases",
+                "github-tags"
+            ],
+            "matchUpdateTypes": [
+                "patch"
+            ],
+            "enabled": true,
+            "automerge": true
+        },
+        // === 2.4 github release 制品更新配置 (end) ===
+
+        // === 2.5 build-harbor commitid 类型制品更新配置 (start) ===
+        // 支持 harbor 特殊版本号自动更新，如： v1.2.3-g78e9a8e
+        {
+            "matchDatasources": [
+                "custom.harbor-newest-commitid-tags"
+            ],
+            "enabled": true
+        },
+        {
+            "matchDatasources": [
+                "custom.harbor-newest-commitid-tags"
+            ],
+            "matchUpdateTypes": [
+                "minor",
+                "patch",
+                "digest"
+            ],
+            "enabled": true,
+            "automerge": true
+        },
+        {
+            "matchDatasources": [
+                "custom.harbor-newest-commitid-tags"
+            ],
+            "matchUpdateTypes": [
+                "major"
+            ],
+            "enabled": false
+        },
+        // === 2.5 build-harbor commitid 类型制品更新配置 (end) ===
+
+        // === 3 更新分组配置 ===
+        // === 3.1 golang 及官方依赖更新分组 (start) ===
+        // 为 golang 官方包设置分组
+        {
+            "matchDatasources": [
+                "go"
+            ],
+            "matchPackageNames": [
+                "golang.org/x/**"
+            ],
+            "groupName": "golang official packages",
+            "groupSlug": "go-official-packages"
+        },
+        // 为 docker 中的 golang 包设置分组
+        {
+            "matchDatasources": [
+                "docker"
+            ],
+            "matchPackagePatterns": [
+                "golang"
+            ],
+            "groupName": "golang official packages",
+            "groupSlug": "go-official-packages"
+        },
+        // 为 go.mod 中的 golang 包设置分组
+        {
+            "matchDatasources": [
+                "golang-version"
+            ],
+            "groupName": "golang official packages",
+            "groupSlug": "go-official-packages"
+        },
+        // === 3.1 golang 及官方依赖更新分组 (end) ===
+
+        // === 3.2 k8s 依赖包更新分组 (start) ===
+        // 为 kubernetes 相关包设置分组. 通常这些包需要一起更新
+        {
+            "matchPackageNames": [
+                "k8s.io/**",
+                "sigs.k8s.io/**",
+                "github.com/kubernetes/**",
+                "kubernetes/**"
+            ],
+            "groupName": "kubernetes"
+        },
+        // === 3.2 k8s 依赖包更新分组 (end) ===
+
+        // === 3.3 patch 更新分组 (start) ===
+        // 为 patch 版本更新设置分组
+        {
+            "groupName": "all patch dependencies",
+            "groupSlug": "patch-upgrades",
+            "matchPackageNames": [
+                "*"
+            ],
+            "matchUpdateTypes": [
+                "patch"
+            ]
+        }
+        // === 3.3 patch 更新分组 (end) ===
+    ]
+}

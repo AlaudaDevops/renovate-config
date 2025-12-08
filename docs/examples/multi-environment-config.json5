@@ -1,0 +1,28 @@
+// 示例 3：多环境配置（基于分支）
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices"],
+  "packageRules": [
+    // 生产分支：仅安全更新
+    {
+      "matchBaseBranches": ["main", "release-*"],
+      "extends": ["security:only-security-updates"],
+      "enabled": true,
+      "automerge": true
+    },
+
+    // 开发分支：允许所有更新
+    {
+      "matchBaseBranches": ["dev", "develop"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "enabled": true,
+      "automerge": true
+    },
+
+    // 特性分支：禁用自动更新
+    {
+      "matchBaseBranches": ["feature/**"],
+      "enabled": false
+    }
+  ]
+}
