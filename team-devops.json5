@@ -47,7 +47,7 @@
             ],
             "enabled": true
         },
-        // 默认不允许更新，下一条配置允许安全更新
+        // 默认不允许更新
         {
             "matchUpdateTypes": [
                 "major",
@@ -56,17 +56,6 @@
             ],
             "enabled": false,
             "automerge": false
-        },
-        {
-            "matchBaseBranches": [
-                "release-*",
-                "alauda-*"
-            ],
-            "extends": [
-                "security:only-security-updates"
-            ],
-            "enabled": true,
-            "automerge": true
         },
         // === 1. 基本策略 (end) ===
 
