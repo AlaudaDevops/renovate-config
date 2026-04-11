@@ -25,6 +25,7 @@
                 "AlaudaDevops/cfssl",
                 "AlaudaDevops/gomplate",
                 "AlaudaDevops/kubernetes",
+                "AlaudaDevops/go-containerregistry",
                 "AlaudaDevops/zap"
             ],
             "versioning": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-alauda-(?<build>\\d+)$"

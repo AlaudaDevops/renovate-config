@@ -11,7 +11,10 @@
     "ignorePaths": [
         "**/testdata/**",
         "**/examples/**",
+        "**/vendor/**",
+		"**/test-fixtures/**",
         "test/**",
+        "vendor/**",
         "testing/**"
     ],
     "dependencyDashboardOSVVulnerabilitySummary": "all",
