@@ -12,6 +12,7 @@
                 "AlaudaDevops/tektoncd-cli",
                 "AlaudaDevops/trivy",
                 "AlaudaDevops/harbor-scanner-trivy",
+                "AlaudaDevops/harbor-cli",
                 "AlaudaDevops/git-clone",
                 "AlaudaDevops/syft",
                 "AlaudaDevops/cosign",
